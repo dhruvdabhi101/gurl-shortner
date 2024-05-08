@@ -10,7 +10,7 @@ func hello(c *fiber.Ctx) error {
 
 func SetupRoutes(app *fiber.App) {
 	api := app.Group("/api")
-	USER := app.Group("/user")
+	USER = app.Group("/user")
 
 	api.Get("/", hello)
 
