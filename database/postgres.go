@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+  "github.com/dhruvdabhi101/gurl-shortner/models"
 
 	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
@@ -32,5 +33,10 @@ func ConnectToDB() {
 
 	}
 	log.Println("connected")
+
+  DB.Logger = logger.Default.LogMode(logger.Info)
+
+  log.Print("Running the migrations")
+  DB.AutoMigrate(&models.User{}, &models.Claims{})
 
 }
