@@ -15,6 +15,12 @@ var jwtKey = []byte(os.Getenv("PRIV_KEY"))
 
 func SetupUserRoutes() {
 	USER.Post("/signup", CreateUser)
+	USER.Post("/signin", LoginUser)
+
+	privUser := USER.Group("/private")
+	privUser.Use(util.SecureAuth())
+	privUser.Get("/user", GetUserData)
+
 }
 
 func CreateUser(c *fiber.Ctx) error {
@@ -72,4 +78,47 @@ func CreateUser(c *fiber.Ctx) error {
 		"refresh_token": refreshToken,
 	})
 
+}
+
+func LoginUser(c *fiber.Ctx) error {
+	type LoginInput struct {
+		Username string `json:"username"`
+		Password string `json:"password"`
+	}
+
+	input := new(LoginInput)
+
+	if err := c.BodyParser(input); err != nil {
+		return c.JSON(fiber.Map{"error": true, "input": "Please Review your input"})
+	}
+
+	u := new(models.User)
+	if res := db.DB.Where(&models.User{Username: input.Username}).First(&u); res.RowsAffected <= 0 {
+		return c.JSON(fiber.Map{"error": true, "general": "Invalid Credential"})
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(input.Password)); err != nil {
+		return c.JSON(fiber.Map{"error": true, "general": "Invalid Credential"})
+	}
+
+	accessToken, refreshToken := util.GenerateTokens(u.UUID.String())
+	accessCookie, refreshCookie := util.GetAuthCookies(accessToken, refreshToken)
+	c.Cookie(accessCookie)
+	c.Cookie(refreshCookie)
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"access_token":  accessToken,
+		"refresh_token": refreshToken,
+	})
+
+}
+
+func GetUserData(c *fiber.Ctx) error {
+	id := c.Locals("id")
+
+	u := new(models.User)
+	if res := db.DB.Where("uuid = ?", id).First(&u); res.RowsAffected <= 0 {
+		return c.JSON(fiber.Map{"error": true, "general": "Cannot find  the user"})
+	}
+	return c.JSON(u)
 }
