@@ -19,6 +19,9 @@ func SetupUserRoutes() {
 
 	privUser := USER.Group("/private")
 	privUser.Use(util.SecureAuth())
+	privUser.Get("/", func(c *fiber.Ctx) error {
+    return c.SendString("Works")
+  })
 	privUser.Get("/user", GetUserData)
 
 }

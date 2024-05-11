@@ -75,7 +75,7 @@ func GenerateRefreshClaims(cl *models.Claims) string {
     return refreshTokenString
 }
 
-func SecureAuth() func(*fiber.Ctx) error {
+func SecureAuth() func(c *fiber.Ctx) error {
     return func(c *fiber.Ctx) error {
         accessToken := c.Cookies("access_token")
         claims := new(models.Claims)
@@ -132,3 +132,4 @@ func GetAuthCookies(accessToken, refreshToken string) (*fiber.Cookie, *fiber.Coo
 
     return accessCookie, refreshCookie
 }
+
